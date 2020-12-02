@@ -1,11 +1,17 @@
-from numpy import array
+from numpy import array, concatenate, flip
 from copy import deepcopy
 from fractions import Fraction
+from functools import reduce
 
-equation = array([
-    [Fraction(2), Fraction(2), Fraction(0), Fraction(1)],
-    [Fraction(3), Fraction(0), Fraction(3), Fraction(1)],
-    [Fraction(0), Fraction(4), Fraction(4), Fraction(1)],
+variables = array([
+    [Fraction(2), Fraction(2), Fraction(1)],
+    [Fraction(3), Fraction(0), Fraction(3)],
+    [Fraction(2), Fraction(4), Fraction(4)],
+])
+values = array([
+    [Fraction(1)],
+    [Fraction(1)],
+    [Fraction(1)],
 ])
 
 
@@ -17,66 +23,77 @@ class InvalidGrid(Exception):
 
 class GaussElimination(object):
 
-    def __init__(self, grid=array([])):
-        self.grid = grid
-        self.rows = len(grid)
-        self.columns = len(grid[0])
-        if not self.valid_grid():
-            raise InvalidGrid()
+    def __init__(self, variables, values):
+        self.variables = variables
+        self.values = values
+        self.check_grid()
 
-    def valid_grid(self):
+    def check_grid(self):
+        var_dim = self.variables.shape
+        if not var_dim[0] == var_dim[1]:
+            raise InvalidGrid("Invalid amount of variables given")
 
-        def sum_line(line):
-            return sum([abs(num) for num in line])
+        val_dim = self.values.shape
+        if not var_dim[0] == val_dim[0]:
+            raise InvalidGrid("Number of variables is not the same as answers given")
 
-        def check_line(line, length):
-            return sum_line(line) != 0 and len(line) == length
+        def valid_line(num_array):
+            return 0 not in reduce(lambda x, y: abs(x)+abs(y), num_array)
 
-        check_columns = all([check_line(column, self.columns) for column in self.grid])
-        check_rows = all([check_line(row, self.rows) for row in self.grid.T])
-        check_size = self.rows+1 == self.columns
+        if not (valid_line(self.variables) and valid_line(self.variables.T)):
+            raise InvalidGrid
 
-        return check_rows and check_columns and check_size
+    def simplify_variables(self, clean_grid=True):
+        for r_num, row in enumerate(self.variables):
+            diag_value = row[r_num]
+            if diag_value == 0:
+                print("fuck")
+                temp = deepcopy(self.variables[r_num])
+                self.variables[r_num] = self.variables[r_num+1]
+                self.variables[r_num+1] = temp
+                return self.simplify_variables()
+            row_index = r_num+1
+            for r in self.variables[row_index:]:
+                d_lead = r[r_num] / diag_value
+                r -= row * d_lead
+                self.values[row_index] -= self.values[r_num] * d_lead
+                row_index += 1
 
-    def solve(self):
-        # Implement fraction class when less lazy
-        grid = self.grid.astype(Fraction)
+        return self
 
-        for row_num, row in enumerate(grid):
-            diag_lead = row[row_num]
+    def clean_grid(self):
+        for r_num, r in enumerate(self.variables):
+            diag_lead = self.variables[r_num][r_num]
+            r /= diag_lead
+            self.values[r_num] /= diag_lead
 
-            if diag_lead == 0:
-                temp = deepcopy(grid[row_num])
-                grid[row_num] = grid[row_num+1]
-                grid[row_num+1] = temp
+    def solve_system(self):
+        def quick_flip():
+            self.variables = flip(self.variables)
+            self.values = flip(self.values)
 
-                return self.solver(grid)
-                return self.solve(grid)
+        self.simplify_variables()
+        quick_flip()
+        self.simplify_variables()
+        quick_flip()
 
-            for r_num, r in enumerate(grid[row_num+1:]):
-                d_lead = r[row_num] / diag_lead
-                if d_lead == 0:
-                    continue
-                r -= row*d_lead
+        self.clean_grid()
 
-        for r_num, row in enumerate(grid):
-            diag_lead = row[row_num]
-            grid[r_num] = [value/diag_lead if diag_lead != 0 else value for value in row]
-
-        self.grid = grid
         return self
 
     def __str__(self):
-        letters = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ") + list("abcdefghijklmnopqrstuvwxyz")
-        index = letters[:self.columns-1] + ["=="]
-        output = "\t-|-\t".join(index) + "\n"
-        for row in self.grid:
-            row = list(map(lambda x: str(Fraction(x)), row))  # neatening the -0's
-            output += "\t-|- \t".join(row) + "\n"
+        letters = list("XYZABCDEFGHIJKLMNOPQRSTUVW")
+        length = self.variables.shape[0]
+        output = "\t".join(letters[:length]) + "\n"
+        self.variables = self.variables.astype(Fraction)
+        self.values = self.values.astype(Fraction)
+        for row, val in zip(self.variables, self.values):
+            for var in row:
+                output += str(var) + "\t"
+            output += "=\t" + str(val[0])+"\n"
         return output
 
 
-grid = GaussElimination(equation)
-
 if __name__ == '__main__':
-    print(grid.solve())
+    grid = GaussElimination(variables, values)
+    print(grid.solve_system())
