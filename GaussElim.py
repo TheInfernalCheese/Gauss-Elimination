@@ -44,7 +44,7 @@ class GaussElimination(object):
 
         for row_num, row in enumerate(grid):
             diag_lead = row[row_num]
-            print(type(diag_lead))
+
             if diag_lead == 0:
                 temp = deepcopy(grid[row_num])
                 grid[row_num] = grid[row_num+1]
