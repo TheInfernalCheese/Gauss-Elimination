@@ -1,4 +1,4 @@
-from numpy import array, concatenate, flip
+from numpy import array, flip
 from copy import deepcopy
 from fractions import Fraction
 from functools import reduce
