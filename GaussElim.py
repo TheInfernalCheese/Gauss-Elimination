@@ -1,5 +1,7 @@
 from numpy import array
 from copy import deepcopy
+from fractions import Fraction
+
 equation = array([
     [2, 2, 0, 1],
     [3, 0, 3, 1],
