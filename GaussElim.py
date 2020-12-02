@@ -3,9 +3,9 @@ from copy import deepcopy
 from fractions import Fraction
 
 equation = array([
-    [2, 2, 0, 1],
-    [3, 0, 3, 1],
-    [0, 4, 4, 1],
+    [Fraction(2), Fraction(2), Fraction(0), Fraction(1)],
+    [Fraction(3), Fraction(0), Fraction(3), Fraction(1)],
+    [Fraction(0), Fraction(4), Fraction(4), Fraction(1)],
 ])
 
 
@@ -40,11 +40,11 @@ class GaussElimination(object):
 
     def solve(self):
         # Implement fraction class when less lazy
-        grid = self.grid.astype(float)
+        grid = self.grid.astype(Fraction)
 
         for row_num, row in enumerate(grid):
             diag_lead = row[row_num]
-
+            print(type(diag_lead))
             if diag_lead == 0:
                 temp = deepcopy(grid[row_num])
                 grid[row_num] = grid[row_num+1]
@@ -71,7 +71,7 @@ class GaussElimination(object):
         index = letters[:self.columns-1] + ["=="]
         output = "\t-|-\t".join(index) + "\n"
         for row in self.grid:
-            row = list(map(lambda x: str(float(x)), row))  # neatening the -0's
+            row = list(map(lambda x: str(Fraction(x)), row))  # neatening the -0's
             output += "\t-|- \t".join(row) + "\n"
         return output
 
