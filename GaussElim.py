@@ -77,4 +77,5 @@ class GaussElimination(object):
 grid = GaussElimination(equation)
 
 
-print(grid.solve())
+if __name__ == '__main__':
+    print(grid.solve())
